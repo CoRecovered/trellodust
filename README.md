@@ -1,28 +1,28 @@
 # Trello to Dust Project Brief Sync
 
-This project implements a focused Dust assignment use case: keep a Dust agent's knowledge up to date with the current state of a Trello project board.
+This project keeps a Dust data source up to date with the state of a Trello project board.
 
 ## Use case
 
-Project managers often want to ask an AI agent questions like:
+Project teams often need quick answers to questions such as:
 
 - What is blocked right now?
 - What changed recently?
 - Which cards are overdue or missing owners?
-- What should I raise in the next standup?
+- What should be raised in the next standup?
 
-The script reads Trello board, list, card, label, due-date, checklist, and recent activity data, then publishes a concise Markdown document into a Dust data source. A Dust agent can use that document as searchable project context.
+The sync reads Trello board, list, card, label, due-date, checklist, and recent activity data. It converts that data into a concise Markdown project brief and upserts the brief into a Dust data source.
 
-## Why this approach
+## Approach
 
-I chose Dust data-source document upsert instead of a remote MCP server for the first version because it is faster to build, easier to demo, and fits an asynchronous project-management sync pattern. Trello boards are not usually queried second-by-second; a scheduled sync every few minutes or hours is enough for most status-reporting workflows.
+The integration uses a batch document sync. This fits project-status workflows well because Trello boards usually do not need second-by-second reads inside the agent. A scheduled run every few minutes or hours can keep the Dust knowledge base current while keeping the architecture simple.
 
-An MCP server would be a strong follow-up if users needed live Trello actions from inside Dust, such as moving a card or creating a comment. For this assignment, the data-source approach keeps the blast radius small while still connecting Trello data to Dust in a production-shaped way.
+A remote MCP server would be a good next step if the agent needed live Trello actions, such as creating cards, moving cards, or posting comments. For this use case, a read-only data-source sync is enough to support project summaries, blocker detection, and standup preparation.
 
 ## Files
 
-- `trello_dust_sync.py`: CLI sync tool.
-- `fixtures/sample_trello_export.json`: offline sample board used for validation and demos.
+- `trello_dust_sync.py`: command-line sync tool.
+- `fixtures/sample_trello_export.json`: sample Trello export used for offline validation.
 - `tests/test_trello_dust_sync.py`: unit tests for transformation and Dust payload creation.
 - `.env.example`: environment variables needed for a real sync.
 
@@ -31,11 +31,10 @@ An MCP server would be a strong follow-up if users needed live Trello actions fr
 This project uses only the Python standard library.
 
 ```bash
-cd dust-trello-assignment
 python3 -m unittest discover -s tests
 ```
 
-For a real Trello and Dust sync:
+Create a local `.env` file:
 
 ```bash
 cp .env.example .env
@@ -46,29 +45,33 @@ Fill in:
 - `TRELLO_API_KEY`
 - `TRELLO_API_TOKEN`
 - `TRELLO_BOARD_ID`
+- `DUST_API_BASE`
 - `DUST_API_KEY`
 - `DUST_WORKSPACE_ID`
 - `DUST_SPACE_ID`
 - `DUST_DATA_SOURCE_ID`
 
-Then run:
+Use `https://eu.dust.tt/api/v1` for `DUST_API_BASE` when the Dust API key screen shows the EU domain. Use `https://dust.tt/api/v1` for the default/global domain.
+
+Run a dry run first:
 
 ```bash
 python3 trello_dust_sync.py sync --dry-run
+```
+
+Then publish to Dust:
+
+```bash
 python3 trello_dust_sync.py sync
 ```
 
-The dry run prints the generated Markdown and does not call Dust.
+## Demo Flow
 
-## Demo flow
-
-1. Create a Trello board called `Dust Launch Plan`.
-2. Add lists such as `Backlog`, `In Progress`, `Blocked`, and `Done`.
-3. Add cards with labels, due dates, members, comments, and checklist items.
-4. Run `python3 trello_dust_sync.py sync --dry-run` to show the normalized document.
-5. Run `python3 trello_dust_sync.py sync` to publish to Dust.
-6. In Dust, create an agent with access to the data source.
-7. Ask:
+1. Open the Trello board and show the lists, cards, labels, due dates, comments, and activity.
+2. Run `python3 trello_dust_sync.py sync --dry-run` to show the normalized Markdown.
+3. Run `python3 trello_dust_sync.py sync` to publish the document to Dust.
+4. Open the Dust data source and confirm the project brief was updated.
+5. Ask a Dust agent questions such as:
    - "Summarize the current Trello board."
    - "Which work is blocked?"
    - "What changed recently?"
@@ -76,25 +79,20 @@ The dry run prints the generated Markdown and does not call Dust.
 
 ## Validation
 
-I validated the transformation offline using a realistic Trello fixture and unit tests. The tests verify that:
+The project includes an offline Trello fixture and unit tests. The tests verify that:
 
 - Cards are grouped under their Trello lists.
 - Blocked, overdue, and completed cards are highlighted.
 - Recent activity is included.
-- The Dust upsert payload contains the expected title, MIME type, text, tags, source URL, timestamp, and async/lightweight flags.
+- The Dust upsert payload contains the expected title, MIME type, text, tags, source URL, timestamp, and upload flags.
 
-For live validation, run the sync with `--dry-run` first, compare the output to the Trello board, then run without `--dry-run` and ask a Dust agent questions that require the synced content.
+For live validation, run the sync with `--dry-run`, compare the generated Markdown with the Trello board, then run without `--dry-run` and query the Dust agent against the synced content.
 
-## Assumptions and limitations
+## Assumptions and Limitations
 
 - The script syncs one Trello board into one Dust document.
 - It is designed for periodic batch sync, not real-time webhook updates.
 - It reads open and closed cards so status history is visible.
 - It does not mutate Trello data.
-- It stores Trello member IDs rather than resolving all user display names, keeping the API surface small for the assignment.
-- Larger production boards may need pagination, rate-limit backoff, and incremental sync state.
-
-## References
-
-- Trello boards API documents board cards, lists, members, and actions endpoints.
-- Dust document API supports upserting a document into a workspace data source with `title`, `mime_type`, `text`, `source_url`, `tags`, and `timestamp`.
+- It stores Trello member IDs rather than resolving all user display names.
+- Larger production boards may need pagination, rate-limit backoff, incremental sync state, and richer observability.

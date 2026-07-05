@@ -24,6 +24,7 @@ class ConfigError(Exception):
 
 
 def load_dotenv(path: Path) -> None:
+    """Load local environment variables without requiring an extra package."""
     candidates = [path]
     if path.name == ".env" and path.parent.exists():
         candidates.append(path.with_name(".env.example"))
@@ -71,6 +72,7 @@ def http_json(
     headers: dict[str, str] | None = None,
     body: dict[str, Any] | None = None,
 ) -> Any:
+    """Send an HTTP request and parse the JSON response."""
     data = None
     request_headers = {"Accept": "application/json"}
     if headers:
@@ -96,6 +98,7 @@ class TrelloClient:
         self.token = token
 
     def get(self, path: str, params: dict[str, Any] | None = None) -> Any:
+        """Call a Trello API path with the configured key and token."""
         query = {"key": self.api_key, "token": self.token}
         if params:
             query.update(params)
@@ -103,6 +106,7 @@ class TrelloClient:
         return http_json("GET", url)
 
     def export_board(self, board_id: str, action_limit: int = 25) -> dict[str, Any]:
+        """Fetch the Trello objects needed to build the project brief."""
         board = self.get(
             f"/boards/{board_id}",
             {
@@ -151,12 +155,14 @@ def sorted_lists(lists: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def is_blocked(card: dict[str, Any], list_name: str) -> bool:
+    """Detect common blocked/waiting signals across labels, text, and list name."""
     label_names = {label.get("name", "").lower() for label in card.get("labels", [])}
     text = f"{card.get('name', '')} {card.get('desc', '')} {list_name}".lower()
     return "blocked" in label_names or "blocked" in text or "waiting" in text
 
 
 def is_overdue(card: dict[str, Any], reference_time: dt.datetime) -> bool:
+    """Treat a card as overdue only when its due date is incomplete and in the past."""
     due = parse_iso(card.get("due"))
     return bool(due and due < reference_time and not card.get("dueComplete"))
 
@@ -218,6 +224,7 @@ def format_action(action: dict[str, Any]) -> str:
 
 
 def build_markdown(export: dict[str, Any], reference_time: dt.datetime | None = None) -> str:
+    """Convert the raw Trello export into a readable Markdown brief for Dust."""
     reference_time = reference_time or now_utc()
     board = export["board"]
     lists = sorted_lists(export.get("lists", []))
@@ -299,6 +306,7 @@ def build_markdown(export: dict[str, Any], reference_time: dt.datetime | None = 
 
 
 def build_dust_payload(export: dict[str, Any], markdown: str, reference_time: dt.datetime | None = None) -> dict[str, Any]:
+    """Create the document body expected by Dust's upsert endpoint."""
     reference_time = reference_time or now_utc()
     board = export["board"]
     return {
@@ -314,6 +322,7 @@ def build_dust_payload(export: dict[str, Any], markdown: str, reference_time: dt
 
 
 def upsert_dust_document(payload: dict[str, Any], document_id: str) -> Any:
+    """Create or update the Dust document that stores the Trello project brief."""
     workspace_id = require_env("DUST_WORKSPACE_ID")
     space_id = require_env("DUST_SPACE_ID")
     data_source_id = require_env("DUST_DATA_SOURCE_ID")

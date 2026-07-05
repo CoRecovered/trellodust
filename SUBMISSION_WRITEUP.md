@@ -1,37 +1,36 @@
-# Submission write-up
+# Submission Write-Up
 
-## Use case
+## Use Case
 
-I built a Trello-to-Dust project briefing sync. The goal is to let a Dust agent answer project-management questions from a Trello board, such as what is blocked, what is overdue, what changed recently, and what should be raised in a standup.
+The project implements a Trello-to-Dust project briefing sync. The goal is to let a Dust agent answer project-management questions from a Trello board, including current blockers, overdue cards, recent activity, and standup status.
 
-## How it works
+## How It Works
 
-The CLI reads one Trello board using the Trello REST API. It fetches board metadata, lists, cards, and recent activity. It then normalizes that data into a Markdown document grouped by Trello list, with special sections for blocked/waiting cards, overdue cards, and recent activity.
+The command-line script reads one Trello board through the Trello REST API. It fetches board metadata, lists, cards, and recent activity. It then normalizes that data into a Markdown document grouped by Trello list, with dedicated sections for blocked or waiting cards, overdue cards, and recent activity.
 
-The script publishes that Markdown into a Dust data-source document using Dust's document upsert API. The document includes a title, MIME type, text content, source URL, tags, timestamp, and upload options.
+The script publishes the Markdown into a Dust data-source document using Dust's document upsert API. The document payload includes a title, MIME type, text content, source URL, tags, timestamp, and upload options.
 
 ## Validation
 
-I validated the core behavior offline with a realistic Trello fixture and unit tests. The tests check that cards are grouped by list, blocked and overdue work is surfaced, recent activity is preserved, and the Dust payload matches the expected document upsert shape.
+The core behavior is validated offline with a realistic Trello fixture and unit tests. The tests check that cards are grouped by list, blocked and overdue work is surfaced, recent activity is preserved, and the Dust payload matches the expected document upsert shape.
 
-I also validated the output manually with a dry run:
+Manual validation uses a dry run before publishing:
 
 ```bash
 python3 trello_dust_sync.py sync --fixture fixtures/sample_trello_export.json --dry-run
 python3 -m unittest discover -s tests
 ```
 
-For live validation, I would run the same sync against a real Trello board, confirm the generated Markdown matches the board, upload it to Dust, and ask a Dust agent questions that require the synced Trello context.
+For live validation, the sync is run against a real Trello board, the generated Markdown is compared with the board, the document is uploaded to Dust, and a Dust agent is queried against the synced Trello content.
 
-## Assumptions, tradeoffs, and limitations
+## Assumptions, Tradeoffs, and Limitations
 
-This implementation syncs one Trello board into one Dust document. I chose that scope because it is easy to demo, easy to reason about, and appropriate for a 3-hour assignment.
+This implementation syncs one Trello board into one Dust document. That scope keeps the workflow easy to demo and reason about while still covering the important Trello objects: board metadata, lists, cards, labels, due dates, checklist progress, links, and recent actions.
 
-The sync is batch-oriented rather than real-time. For many project status workflows, scheduled sync is enough. In production, I would add pagination, retry/backoff for rate limits, webhook-based incremental updates, richer member-name resolution, and observability around sync failures.
+The sync is batch-oriented rather than real-time. For many project status workflows, scheduled sync is enough. In production, useful additions would include pagination, retry/backoff for rate limits, webhook-based incremental updates, richer member-name resolution, and observability around sync failures.
 
-## Why this approach
+## Approach Rationale
 
-I chose a Dust data-source document upsert rather than a remote MCP server because the primary job is knowledge ingestion: make Trello project state available to a Dust agent. This keeps the integration simple, reliable, and low-risk.
+A Dust data-source document upsert is used because the primary job is knowledge ingestion: make Trello project state available to a Dust agent. This keeps the integration simple, reliable, and low-risk.
 
-A remote MCP server would be a reasonable alternative if the agent needed to perform live Trello actions, such as creating cards, moving cards, or posting comments. For this assignment, read-only sync is the safer and more focused technical solution.
-
+A remote MCP server would be a reasonable alternative if the agent needed live Trello actions, such as creating cards, moving cards, or posting comments. For this use case, read-only sync is the safer and more focused technical solution.

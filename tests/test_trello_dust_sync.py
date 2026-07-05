@@ -26,7 +26,7 @@ class TrelloDustSyncTests(unittest.TestCase):
 
         self.assertIn("# Trello Project Brief: Dust Launch Plan", markdown)
         self.assertIn("### Blocked", markdown)
-        self.assertIn("Blocked: waiting for Dust API key", markdown)
+        self.assertIn("Blocked: waiting for customer approval", markdown)
         self.assertIn("## Blocked or waiting", markdown)
         self.assertIn("## Overdue", markdown)
         self.assertIn("Map Trello card fields into Dust document", markdown)
