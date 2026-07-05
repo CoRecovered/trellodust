@@ -1,0 +1,96 @@
+{
+  "board": {
+    "id": "board123",
+    "name": "Dust Launch Plan",
+    "desc": "Example project board for syncing Trello into Dust.",
+    "url": "https://trello.com/b/example/dust-launch-plan",
+    "dateLastActivity": "2026-07-02T15:30:00.000Z"
+  },
+  "lists": [
+    { "id": "list_backlog", "name": "Backlog", "closed": false, "pos": 1 },
+    { "id": "list_progress", "name": "In Progress", "closed": false, "pos": 2 },
+    { "id": "list_blocked", "name": "Blocked", "closed": false, "pos": 3 },
+    { "id": "list_done", "name": "Done", "closed": false, "pos": 4 }
+  ],
+  "cards": [
+    {
+      "id": "card1",
+      "name": "Define project health questions for Dust agent",
+      "desc": "Decide the first set of questions users should ask about the board.",
+      "idList": "list_backlog",
+      "closed": false,
+      "due": "2026-07-08T18:00:00.000Z",
+      "dueComplete": false,
+      "dateLastActivity": "2026-07-01T10:15:00.000Z",
+      "labels": [{ "name": "Planning", "color": "blue" }],
+      "idMembers": ["alice"],
+      "shortUrl": "https://trello.com/c/card1",
+      "badges": { "comments": 1, "checkItems": 3, "checkItemsChecked": 1 }
+    },
+    {
+      "id": "card2",
+      "name": "Map Trello card fields into Dust document",
+      "desc": "Include list, labels, due dates, checklist progress, recent comments, and links.",
+      "idList": "list_progress",
+      "closed": false,
+      "due": "2026-07-03T17:00:00.000Z",
+      "dueComplete": false,
+      "dateLastActivity": "2026-07-02T09:00:00.000Z",
+      "labels": [{ "name": "Integration", "color": "green" }],
+      "idMembers": ["bob"],
+      "shortUrl": "https://trello.com/c/card2",
+      "badges": { "comments": 2, "checkItems": 4, "checkItemsChecked": 3 }
+    },
+    {
+      "id": "card3",
+      "name": "Blocked: waiting for Dust API key",
+      "desc": "Cannot complete live upload until the Dust API key and data-source IDs are available.",
+      "idList": "list_blocked",
+      "closed": false,
+      "due": "2026-07-01T17:00:00.000Z",
+      "dueComplete": false,
+      "dateLastActivity": "2026-07-02T15:30:00.000Z",
+      "labels": [{ "name": "Blocked", "color": "red" }],
+      "idMembers": ["candidate"],
+      "shortUrl": "https://trello.com/c/card3",
+      "badges": { "comments": 3, "checkItems": 2, "checkItemsChecked": 0 }
+    },
+    {
+      "id": "card4",
+      "name": "Create sample board data",
+      "desc": "Seed realistic cards for the live review.",
+      "idList": "list_done",
+      "closed": false,
+      "due": "2026-06-30T17:00:00.000Z",
+      "dueComplete": true,
+      "dateLastActivity": "2026-06-30T12:00:00.000Z",
+      "labels": [{ "name": "Demo", "color": "purple" }],
+      "idMembers": ["candidate"],
+      "shortUrl": "https://trello.com/c/card4",
+      "badges": { "comments": 0, "checkItems": 2, "checkItemsChecked": 2 }
+    }
+  ],
+  "actions": [
+    {
+      "id": "action1",
+      "type": "commentCard",
+      "date": "2026-07-02T15:30:00.000Z",
+      "memberCreator": { "fullName": "Candidate" },
+      "data": {
+        "card": { "name": "Blocked: waiting for Dust API key" },
+        "text": "Asked Dust support where to find the data source IDs."
+      }
+    },
+    {
+      "id": "action2",
+      "type": "updateCard",
+      "date": "2026-07-02T09:00:00.000Z",
+      "memberCreator": { "fullName": "Bob" },
+      "data": {
+        "card": { "name": "Map Trello card fields into Dust document" },
+        "listBefore": { "name": "Backlog" },
+        "listAfter": { "name": "In Progress" }
+      }
+    }
+  ]
+}
