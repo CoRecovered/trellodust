@@ -10,6 +10,8 @@ The command-line script reads one Trello board through the Trello REST API. It f
 
 The script publishes the Markdown into a Dust data-source document using Dust's document upsert API. The document payload includes a title, MIME type, text content, source URL, tags, timestamp, and upload options.
 
+The generated document includes a data-handling note that marks imported Trello text as untrusted source data. The script also redacts Trello `key` and `token` query parameters from HTTP error messages, and includes optional privacy flags to exclude closed cards, member IDs, or recent activity from the synced document.
+
 ## Validation
 
 The core behavior is validated offline with a realistic Trello fixture and unit tests. The tests check that cards are grouped by list, blocked and overdue work is surfaced, recent activity is preserved, and the Dust payload matches the expected document upsert shape.
@@ -28,6 +30,8 @@ For live validation, the sync is run against a real Trello board, the generated 
 This implementation syncs one Trello board into one Dust document. That scope keeps the workflow easy to demo and reason about while still covering the important Trello objects: board metadata, lists, cards, labels, due dates, checklist progress, links, and recent actions.
 
 The sync is batch-oriented rather than real-time. For many project status workflows, scheduled sync is enough. In production, useful additions would include pagination, retry/backoff for rate limits, webhook-based incremental updates, richer member-name resolution, and observability around sync failures.
+
+The default sync includes open and closed cards, member IDs, and recent activity because those fields are useful for status analysis. For stricter environments, the CLI supports `--open-only`, `--hide-members`, and `--no-actions` to reduce the amount of replicated project data.
 
 ## Approach Rationale
 
