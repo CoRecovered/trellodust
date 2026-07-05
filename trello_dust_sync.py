@@ -16,7 +16,7 @@ from typing import Any
 
 
 TRELLO_API_BASE = "https://api.trello.com/1"
-DUST_API_BASE = "https://dust.tt/api/v1"
+DEFAULT_DUST_API_BASE = "https://dust.tt/api/v1"
 
 
 class ConfigError(Exception):
@@ -318,9 +318,10 @@ def upsert_dust_document(payload: dict[str, Any], document_id: str) -> Any:
     space_id = require_env("DUST_SPACE_ID")
     data_source_id = require_env("DUST_DATA_SOURCE_ID")
     api_key = require_env("DUST_API_KEY")
+    dust_api_base = os.environ.get("DUST_API_BASE", DEFAULT_DUST_API_BASE).rstrip("/")
     encoded_document_id = urllib.parse.quote(document_id, safe="")
     url = (
-        f"{DUST_API_BASE}/w/{workspace_id}/spaces/{space_id}"
+        f"{dust_api_base}/w/{workspace_id}/spaces/{space_id}"
         f"/data_sources/{data_source_id}/documents/{encoded_document_id}"
     )
     return http_json("POST", url, headers={"Authorization": f"Bearer {api_key}"}, body=payload)
