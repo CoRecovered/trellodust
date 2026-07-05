@@ -24,14 +24,23 @@ class ConfigError(Exception):
 
 
 def load_dotenv(path: Path) -> None:
-    if not path.exists():
-        return
-    for raw_line in path.read_text(encoding="utf-8").splitlines():
-        line = raw_line.strip()
-        if not line or line.startswith("#") or "=" not in line:
+    candidates = [path]
+    if path.name == ".env" and path.parent.exists():
+        candidates.append(path.with_name(".env.example"))
+
+    for candidate in candidates:
+        if not candidate.exists():
             continue
-        key, value = line.split("=", 1)
-        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+        for raw_line in candidate.read_text(encoding="utf-8").splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            parsed_value = value.strip().strip('"').strip("'")
+            if not parsed_value:
+                continue
+            os.environ.setdefault(key.strip(), parsed_value)
+        break
 
 
 def require_env(name: str) -> str:
